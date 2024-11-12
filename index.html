@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Upload CSV</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background-color: #f5f7fa;
+      margin: 0;
+    }
+
+    .upload-container {
+      width: 400px;
+      padding: 20px;
+      background-color: white;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      border-radius: 10px;
+      text-align: center;
+    }
+
+    .upload-container h2 {
+      margin-bottom: 10px;
+      font-size: 20px;
+      color: #333;
+    }
+
+    .drop-zone {
+      border: 2px dashed #d1d8e0;
+      border-radius: 8px;
+      padding: 30px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+      position: relative;
+    }
+
+    .drop-zone:hover {
+      background-color: #f1f5fa;
+    }
+
+    .drop-zone input[type="file"] {
+      display: none;
+    }
+
+    .drop-zone-text {
+      color: #555;
+    }
+
+    .url-upload {
+      margin-top: 20px;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .url-upload input[type="text"] {
+      flex-grow: 1;
+      padding: 8px;
+      border: 1px solid #d1d8e0;
+      border-radius: 5px;
+    }
+
+    .url-upload button {
+      padding: 8px 15px;
+      border: none;
+      background-color: #4a90e2;
+      color: white;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .progress-container {
+      margin-top: 20px;
+      display: none;
+      text-align: left;
+    }
+
+    .progress-container p {
+      font-size: 14px;
+      color: #333;
+    }
+
+    .progress-bar {
+      width: 100%;
+      background-color: #d1d8e0;
+      border-radius: 5px;
+      overflow: hidden;
+      height: 8px;
+      margin-top: 5px;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background-color: #4a90e2;
+      width: 0;
+      transition: width 0.4s ease;
+    }
+  </style>
+</head>
+<body>
+
+<div class="upload-container">
+  <h2>Upload CSV</h2>
+  <div class="drop-zone" onclick="document.getElementById('fileInput').click()">
+    <input type="file" id="fileInput" accept=".csv" onchange="startUpload()">
+    <p class="drop-zone-text">Select a CSV file to upload<br>or drag and drop it here</p>
+  </div>
+  <div class="url-upload">
+    <input type="text" id="fileUrl" placeholder="Add file URL">
+    <button onclick="uploadFromUrl()">Upload</button>
+  </div>
+  
+  <!-- Progress Indicator -->
+  <div class="progress-container" id="progressContainer">
+    <p id="fileName">Uploading...</p>
+    <div class="progress-bar">
+      <div class="progress-bar-fill" id="progressBar"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function startUpload() {
+    const fileInput = document.getElementById("fileInput");
+    const file = fileInput.files[0];
+    if (file) {
+      document.getElementById("fileName").textContent = `Uploading: ${file.name}`;
+      document.getElementById("progressContainer").style.display = "block";
+      
+      // Simulate upload progress
+      let progress = 0;
+      const progressBar = document.getElementById("progressBar");
+      const interval = setInterval(() => {
+        if (progress >= 100) {
+          clearInterval(interval);
+          document.getElementById("fileName").textContent = `Uploaded: ${file.name}`;
+        } else {
+          progress += 10;
+          progressBar.style.width = `${progress}%`;
+        }
+      }, 300);
+    }
+  }
+
+  function uploadFromUrl() {
+    const url = document.getElementById("fileUrl").value;
+    if (url) {
+      document.getElementById("fileName").textContent = `Uploading from URL...`;
+      document.getElementById("progressContainer").style.display = "block";
+
+      // Simulate URL upload progress
+      let progress = 0;
+      const progressBar = document.getElementById("progressBar");
+      const interval = setInterval(() => {
+        if (progress >= 100) {
+          clearInterval(interval);
+          document.getElementById("fileName").textContent = `Uploaded from URL: ${url}`;
+        } else {
+          progress += 15;
+          progressBar.style.width = `${progress}%`;
+        }
+      }, 300);
+    } else {
+      alert("Please enter a valid URL.");
+    }
+  }
+</script>
+
+</body>
+</html>
