@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Upload CSV</title>
+  <title>MP3/MP4 File Upload</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -51,29 +51,6 @@
       color: #555;
     }
 
-    .url-upload {
-      margin-top: 20px;
-      display: flex;
-      gap: 10px;
-      align-items: center;
-    }
-
-    .url-upload input[type="text"] {
-      flex-grow: 1;
-      padding: 8px;
-      border: 1px solid #d1d8e0;
-      border-radius: 5px;
-    }
-
-    .url-upload button {
-      padding: 8px 15px;
-      border: none;
-      background-color: #4a90e2;
-      color: white;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-
     .progress-container {
       margin-top: 20px;
       display: none;
@@ -105,16 +82,12 @@
 <body>
 
 <div class="upload-container">
-  <h2>Upload CSV</h2>
+  <h2>Upload MP3/MP4</h2>
   <div class="drop-zone" onclick="document.getElementById('fileInput').click()">
-    <input type="file" id="fileInput" accept=".csv" onchange="startUpload()">
-    <p class="drop-zone-text">Select a CSV file to upload<br>or drag and drop it here</p>
+    <input type="file" id="fileInput" accept=".mp3, .mp4" onchange="startUpload()">
+    <p class="drop-zone-text">Select an MP3 or MP4 file to upload<br>or drag and drop it here</p>
   </div>
-  <div class="url-upload">
-    <input type="text" id="fileUrl" placeholder="Add file URL">
-    <button onclick="uploadFromUrl()">Upload</button>
-  </div>
-  
+
   <!-- Progress Indicator -->
   <div class="progress-container" id="progressContainer">
     <p id="fileName">Uploading...</p>
@@ -128,6 +101,7 @@
   function startUpload() {
     const fileInput = document.getElementById("fileInput");
     const file = fileInput.files[0];
+    
     if (file) {
       document.getElementById("fileName").textContent = `Uploading: ${file.name}`;
       document.getElementById("progressContainer").style.display = "block";
@@ -138,35 +112,12 @@
       const interval = setInterval(() => {
         if (progress >= 100) {
           clearInterval(interval);
-          document.getElementById("fileName").textContent = `Uploaded: ${file.name}`;
+          document.getElementById("fileName").textContent = `Upload Complete: ${file.name}`;
         } else {
           progress += 10;
           progressBar.style.width = `${progress}%`;
         }
       }, 300);
-    }
-  }
-
-  function uploadFromUrl() {
-    const url = document.getElementById("fileUrl").value;
-    if (url) {
-      document.getElementById("fileName").textContent = `Uploading from URL...`;
-      document.getElementById("progressContainer").style.display = "block";
-
-      // Simulate URL upload progress
-      let progress = 0;
-      const progressBar = document.getElementById("progressBar");
-      const interval = setInterval(() => {
-        if (progress >= 100) {
-          clearInterval(interval);
-          document.getElementById("fileName").textContent = `Uploaded from URL: ${url}`;
-        } else {
-          progress += 15;
-          progressBar.style.width = `${progress}%`;
-        }
-      }, 300);
-    } else {
-      alert("Please enter a valid URL.");
     }
   }
 </script>
