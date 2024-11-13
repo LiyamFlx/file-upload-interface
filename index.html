@@ -4,8 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>InsightWave Engagement Analysis</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
     <style>
-        /* Basic CSS for styling */
+        /* Basic styling for the interface */
         body {
             font-family: Arial, sans-serif;
             background-color: #121212;
@@ -13,209 +16,195 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
-            height: 100vh;
-            margin: 0;
-        }
-        .container {
-            max-width: 600px;
             padding: 20px;
-            background-color: #1f1f1f;
-            border-radius: 8px;
+        }
+        #app {
+            max-width: 700px;
+            background: #1c1c1c;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
             text-align: center;
         }
-        h1, h2 {
-            color: #f0a500;
-        }
         button {
-            padding: 10px 20px;
             margin: 10px;
-            background-color: #f0a500;
+            padding: 10px 20px;
+            font-size: 16px;
+            color: #fff;
+            background-color: #FF8C00;
             border: none;
             border-radius: 5px;
-            color: #1f1f1f;
-            font-weight: bold;
             cursor: pointer;
+            transition: 0.3s;
         }
         button:hover {
-            background-color: #d48800;
+            background-color: #ffb347;
         }
-        #fileInput, #progressBar, canvas, .tooltip {
-            width: 100%;
+        .hidden {
+            display: none;
         }
-        #progressBar {
-            height: 20px;
-            background-color: #333;
-            border-radius: 5px;
-            margin: 20px 0;
+        canvas {
+            margin-top: 20px;
         }
-        #progressBar div {
-            height: 100%;
-            width: 0;
-            background-color: #f0a500;
-            border-radius: 5px;
-        }
+        /* Tooltip styling */
         .tooltip {
             position: absolute;
             background-color: #333;
-            color: #f0f0f0;
+            color: #fff;
             padding: 5px;
-            border-radius: 4px;
+            border-radius: 5px;
             font-size: 12px;
-            display: none;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <!-- Start Screen -->
-        <div id="startScreen">
-            <h1>Welcome to InsightWave</h1>
-            <p>Analyze your audio content for engagement and sentiment insights.</p>
-            <button onclick="showScreen('uploadScreen')">Start Analysis</button>
+    <div id="app">
+        <h1>Welcome to InsightWave</h1>
+        <p>Analyze your audio content and gain AI-driven insights into engagement levels.</p>
+        
+        <!-- Step 1: Start Analysis -->
+        <button id="startAnalysisBtn" onclick="showScreen(2)">Start Analysis</button>
+        
+        <!-- Step 2: Upload File -->
+        <div id="uploadSection" class="hidden">
+            <input type="file" id="fileInput" accept=".mp3,.wav">
+            <button onclick="startAnalysis()">Calculate Engagement</button>
         </div>
 
-        <!-- Upload File Screen -->
-        <div id="uploadScreen" style="display: none;">
-            <h2>Upload Audio File</h2>
-            <input type="file" id="fileInput" accept=".mp3, .wav, .mp4" onchange="enableAnalysis()">
-            <button id="analyzeButton" onclick="startAnalysis()" disabled>Analyze</button>
-        </div>
-
-        <!-- Analysis Screen -->
-        <div id="analysisScreen" style="display: none;">
+        <!-- Step 3: Real-Time Analysis -->
+        <div id="analysisSection" class="hidden">
             <h2>Real-Time Analysis</h2>
-            <p>Analyzing volume, pitch, sentiment, and more...</p>
-            <div id="progressBar"><div></div></div>
             <canvas id="engagementChart"></canvas>
-            <button onclick="showScreen('uploadScreen')">Back</button>
-            <button onclick="showScreen('resultsScreen')">View Results</button>
+            <button onclick="showScreen(1)">Back</button>
+            <button onclick="showScreen(4)">View Results</button>
         </div>
 
-        <!-- Results Screen -->
-        <div id="resultsScreen" style="display: none;">
+        <!-- Step 4: Results -->
+        <div id="resultsSection" class="hidden">
             <h2>Analysis Results</h2>
-            <p>Key Insights</p>
+            <p><strong>Key Insights:</strong></p>
             <ul>
-                <li>Overall Engagement Score: <span id="overallScore">-</span>/10</li>
-                <li>Peak Engagement Times: Segment 1, Segment 3</li>
-                <li>Improvement Tips: Increase interaction during pauses</li>
+                <li><strong>Average Engagement Score:</strong> <span id="averageScore">-</span>/10</li>
+                <li><strong>Peak Engagement Times:</strong> Segment 1, Segment 3</li>
+                <li><strong>Improvement Tips:</strong> Increase interaction during pauses</li>
             </ul>
-            <button onclick="downloadReport()">Download Report</button>
-            <button onclick="showScreen('startScreen')">New Analysis</button>
+            <button onclick="generatePDFReport()">Download Report</button>
+            <button onclick="showScreen(1)">New Analysis</button>
         </div>
+
+        <!-- Tooltip for hover data insights -->
+        <div id="tooltip" class="tooltip"></div>
     </div>
 
-    <!-- Tooltip -->
-    <div class="tooltip" id="tooltip"></div>
-
-    <!-- Include Chart.js for graphing -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Include jsPDF for PDF generation -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
-
     <script>
-        // Initialize global variables
-        let engagementData = [];
-        let sentimentData = [];
-        let labels = [];
-        let chart;
-
-        // Function to navigate between screens
-        function showScreen(screenId) {
-            document.querySelectorAll('.container > div').forEach(div => div.style.display = 'none');
-            document.getElementById(screenId).style.display = 'block';
-        }
-
-        // Enable analysis button when a file is uploaded
-        function enableAnalysis() {
-            document.getElementById('analyzeButton').disabled = false;
-        }
-
-        // Initialize the chart for real-time analysis
-        function initChart() {
-            const ctx = document.getElementById('engagementChart').getContext('2d');
-            chart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [
-                        {
-                            label: 'Engagement Score',
-                            borderColor: 'rgba(240, 165, 0, 1)',
-                            backgroundColor: 'rgba(240, 165, 0, 0.2)',
-                            data: engagementData,
-                            fill: true,
-                        },
-                        {
-                            label: 'Sentiment Score',
-                            borderColor: 'rgba(75, 192, 192, 1)',
-                            backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                            data: sentimentData,
-                            fill: true,
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    interaction: {
-                        mode: 'index',
-                        intersect: false,
-                    },
-                    plugins: {
-                        tooltip: {
-                            enabled: false,
-                            external: customTooltip
-                        }
-                    },
-                    scales: {
-                        x: {
-                            title: { display: true, text: 'Time (s)' }
-                        },
-                        y: {
-                            title: { display: true, text: 'Score' }
-                        }
-                    }
-                }
+        // Show specific screen
+        function showScreen(screenNumber) {
+            document.querySelectorAll('#app > div').forEach(section => {
+                section.classList.add('hidden');
             });
+            if (screenNumber === 1) document.getElementById('startAnalysisBtn').classList.remove('hidden');
+            if (screenNumber === 2) document.getElementById('uploadSection').classList.remove('hidden');
+            if (screenNumber === 3) document.getElementById('analysisSection').classList.remove('hidden');
+            if (screenNumber === 4) document.getElementById('resultsSection').classList.remove('hidden');
         }
 
-        // Custom tooltip for interactive insights
+        // Initialize chart
+        const ctx = document.getElementById('engagementChart').getContext('2d');
+        const engagementChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [], // Time labels
+                datasets: [{
+                    label: 'Engagement Score',
+                    borderColor: '#FF8C00',
+                    backgroundColor: 'rgba(255, 140, 0, 0.2)',
+                    data: [],
+                    fill: true,
+                }]
+            },
+            options: {
+                responsive: true,
+                interaction: {
+                    mode: 'nearest',
+                    axis: 'x',
+                    intersect: false
+                },
+                plugins: {
+                    tooltip: {
+                        enabled: false, // Custom tooltip
+                        external: customTooltip
+                    }
+                },
+                scales: {
+                    x: { title: { display: true, text: 'Time (s)' } },
+                    y: { title: { display: true, text: 'Score' } }
+                }
+            }
+        });
+
+        // Custom tooltip function
         function customTooltip(context) {
             const tooltipEl = document.getElementById('tooltip');
-            const tooltipModel = context.tooltip;
-            if (tooltipModel.opacity === 0) {
-                tooltipEl.style.display = 'none';
+            if (context.tooltip.opacity === 0) {
+                tooltipEl.style.opacity = 0;
                 return;
             }
-            tooltipEl.innerHTML = `${tooltipModel.title}: ${tooltipModel.body[0].lines}`;
-            tooltipEl.style.left = context.chart.canvas.offsetLeft + tooltipModel.caretX + 'px';
-            tooltipEl.style.top = context.chart.canvas.offsetTop + tooltipModel.caretY + 'px';
-            tooltipEl.style.display = 'block';
+
+            const { dataset, dataIndex } = context.tooltip.dataPoints[0];
+            const score = dataset.data[dataIndex];
+            tooltipEl.innerHTML = `<strong>Score:</strong> ${score} <br><strong>Time:</strong> ${dataIndex}s`;
+
+            tooltipEl.style.opacity = 1;
+            tooltipEl.style.left = context.tooltip.caretX + 'px';
+            tooltipEl.style.top = context.tooltip.caretY + 'px';
         }
 
-        // Simulate real-time analysis
+        // Real-time data addition
+        let time = 0;
         function startAnalysis() {
-            showScreen('analysisScreen');
-            initChart();
-            const progressBar = document.getElementById('progressBar').firstElementChild;
-            let time = 0;
+            showScreen(3); // Show Analysis Screen
             const interval = setInterval(() => {
-                time += 1;
-                labels.push(time);
-                engagementData.push(Math.random() * 10);
-                sentimentData.push(Math.random() * 10);
-                progressBar.style.width = (time / 30) * 100 + '%'; // Assuming 30 seconds total
-                chart.update();
-                if (time === 30) {
+                if (time < 30) {
+                    const score = (Math.random() * 10).toFixed(2);
+                    engagementChart.data.labels.push(time);
+                    engagementChart.data.datasets[0].data.push(score);
+                    engagementChart.update();
+                    time++;
+                } else {
                     clearInterval(interval);
+                    document.getElementById('averageScore').textContent = calculateAverageScore();
+                    showScreen(4); // Move to Results
                 }
-            }, 1000);
+            }, 500); // Update every 500ms
         }
 
-        // Download the report as PDF
-        function downloadReport() {
+        // Calculate average score
+        function calculateAverageScore() {
+            const scores = engagementChart.data.datasets[0].data;
+            return (scores.reduce((acc, val) => acc + parseFloat(val), 0) / scores.length).toFixed(2);
+        }
+
+        // Generate PDF Report
+        function generatePDFReport() {
             const { jsPDF } = window.jspdf;
             const pdf = new jsPDF();
             pdf.setFontSize(18);
-            pdf.text("InsightWave Engagement
+            pdf.text("InsightWave Engagement Report", 10, 10);
+            pdf.setFontSize(12);
+            pdf.text("This report summarizes the engagement analysis.", 10, 20);
+            pdf.setFontSize(14);
+            pdf.text("Key Insights:", 10, 40);
+            pdf.setFontSize(12);
+            pdf.text("Average Engagement Score: " + document.getElementById('averageScore').textContent, 10, 50);
+            pdf.text("Peak Engagement Times: Segment 1, Segment 3", 10, 60);
+            pdf.text("Improvement Tips: Increase interaction during pauses", 10, 70);
+            pdf.save("InsightWave_Report.pdf");
+        }
+
+        showScreen(1); // Initialize first screen
+    </script>
+</body>
+</html>
