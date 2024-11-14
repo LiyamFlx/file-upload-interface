@@ -3,269 +3,217 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>InsightWave Engagement Analysis</title>
+    <title>InsightWave - Engagement Analysis</title>
     <style>
-        /* Reset and Basic Styles */
-        body, h2, p, button {
-            margin: 0;
-            padding: 0;
-            font-family: Arial, sans-serif;
-        }
-
         body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
+            font-family: Arial, sans-serif;
             background-color: #121212;
             color: #f0f0f0;
+            margin: 0;
+            padding: 0;
         }
-
-        #app {
-            width: 400px;
+        .container {
+            width: 80%;
+            margin: 0 auto;
             padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-            background-color: #1f1f1f;
-            text-align: center;
         }
-
-        .screen {
-            display: none;
-        }
-
-        .screen.active {
-            display: block;
-        }
-
         h2 {
-            font-size: 1.8em;
-            color: #ffcc00;
-            margin-bottom: 15px;
+            text-align: center;
+            font-size: 2em;
+            color: #fbbd3d;
         }
-
-        p {
-            margin: 10px 0 20px 0;
-            font-size: 1em;
-        }
-
-        input[type="file"] {
-            margin: 20px auto;
-        }
-
-        .progress-bar {
-            height: 10px;
-            width: 100%;
-            background-color: #333;
-            border-radius: 5px;
-            margin: 15px 0;
-            overflow: hidden;
-        }
-
-        .progress {
-            height: 100%;
-            width: 0%;
-            background-color: #ffcc00;
-            transition: width 0.3s;
-        }
-
-        #chartContainer {
-            width: 100%;
-            height: 300px;
+        .progress-container {
             margin-top: 20px;
+            width: 100%;
+            height: 20px;
+            background: #333;
+            border-radius: 10px;
         }
-
-        button {
-            padding: 10px 15px;
-            font-size: 1em;
+        .progress-bar {
+            height: 100%;
+            width: 0;
+            background-color: #fbbd3d;
+            border-radius: 10px;
+            transition: width 0.5s ease;
+        }
+        .button {
+            background-color: #fbbd3d;
             border: none;
+            padding: 10px 20px;
+            color: #121212;
+            font-size: 1rem;
             border-radius: 5px;
             cursor: pointer;
-            margin: 10px;
-            transition: background-color 0.3s;
+            margin-top: 20px;
         }
-
-        button:hover {
-            background-color: #444;
+        .button:hover {
+            background-color: #e0890f;
         }
-
-        .primary-button {
-            background-color: #ffcc00;
-            color: #1f1f1f;
+        canvas {
+            margin-top: 20px;
+            max-width: 100%;
+            height: auto;
         }
-
-        .secondary-button {
-            background-color: #333;
-            color: #f0f0f0;
+        .tooltip {
+            position: absolute;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: #fff;
+            padding: 5px;
+            border-radius: 5px;
+            display: none;
         }
-
-        .download-buttons {
-            display: flex;
-            justify-content: center;
+        .tooltip.green {
+            background-color: #4CAF50;
+        }
+        .tooltip.red {
+            background-color: #F44336;
+        }
+        .tooltip.gray {
+            background-color: #9E9E9E;
         }
     </style>
 </head>
 <body>
-    <div id="app">
-        <!-- Start Screen -->
-        <div class="screen active" id="startScreen">
-            <h2>Welcome to InsightWave</h2>
-            <p>Analyze your audio content and gain AI-driven insights into engagement levels and sentiment.</p>
-            <button class="primary-button" onclick="showScreen('uploadScreen')">Start Analysis</button>
-        </div>
+    <div class="container">
+        <h2>Welcome to InsightWave</h2>
+        <p>Analyze your audio content and gain AI-driven insights into engagement levels and sentiment.</p>
+        <button class="button" onclick="showScreen(2)">Start Analysis</button>
 
-        <!-- Upload Screen -->
-        <div class="screen" id="uploadScreen">
-            <h2>Upload Your Audio File</h2>
+        <!-- Screen 2: Upload File -->
+        <div id="screen2" style="display:none;">
+            <h2>Upload File</h2>
             <input type="file" id="fileInput" accept=".mp3,.mp4,.wav">
-            <button class="secondary-button" onclick="showScreen('startScreen')">Back</button>
-            <button class="primary-button" onclick="showScreen('analysisScreen')">Calculate Engagement</button>
+            <div class="progress-container">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+            <button class="button" onclick="showScreen(1)">Back</button>
+            <button class="button" id="nextButton" style="display:none;" onclick="startAnalysis()">Calculate Engagement</button>
         </div>
 
-        <!-- Analysis Screen -->
-        <div class="screen" id="analysisScreen">
+        <!-- Screen 3: Real-Time Analysis -->
+        <div id="screen3" style="display:none;">
             <h2>Real-Time Analysis</h2>
             <p>Analyzing volume, pitch, sentiment, and more...</p>
-            <div class="progress-bar"><div class="progress" id="progressBar"></div></div>
-            <div id="chartContainer">
+            <div class="progress-container">
+                <div class="progress-bar" id="analysisProgress"></div>
+            </div>
+            <button class="button" onclick="showScreen(2)">Back</button>
+            <button class="button" onclick="showScreen(4)" id="viewResultsButton" style="display:none;">View Results</button>
+        </div>
+
+        <!-- Screen 4: Results -->
+        <div id="screen4" style="display:none;">
+            <h2>Analysis Results</h2>
+            <p>Overall Engagement Score: <span id="overallScore">-</span></p>
+            <div id="chartsContainer">
                 <canvas id="engagementChart"></canvas>
                 <canvas id="sentimentChart"></canvas>
             </div>
-            <div class="buttons">
-                <button class="secondary-button" onclick="showScreen('uploadScreen')">Back</button>
-                <button class="primary-button" onclick="showScreen('resultsScreen')">View Results</button>
+            <p>Key Insights:</p>
+            <div id="keyInsights">
+                <ul>
+                    <li>Peak Engagement Times: Segment 1, Segment 3</li>
+                    <li>Improvement Tips: Increase interaction during pauses</li>
+                </ul>
             </div>
+            <button class="button" onclick="downloadReport()">Download Report</button>
+            <button class="button" onclick="showScreen(2)">Back</button>
         </div>
 
-        <!-- Results Screen -->
-        <div class="screen" id="resultsScreen">
-            <h2>Analysis Results</h2>
-            <p>Here are your detailed insights:</p>
-            <div id="chartContainer">
-                <canvas id="resultsChart"></canvas>
-            </div>
-            <div class="download-buttons">
-                <button class="primary-button" onclick="downloadCSV()">Download CSV</button>
-                <button class="secondary-button" onclick="downloadPDF()">Download PDF</button>
-            </div>
-            <button class="secondary-button" onclick="showScreen('startScreen')">Start New Analysis</button>
-        </div>
+        <div class="tooltip" id="tooltip"></div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        function showScreen(screenId) {
-            document.querySelectorAll('.screen').forEach(screen => screen.classList.remove('active'));
-            document.getElementById(screenId).classList.add('active');
-            if (screenId === 'analysisScreen') runAnalysis();
+        let progress = 0;
+        let sentimentData = [];
+        let engagementData = [];
+        let overallEngagementScore = 0;
+        let analysisCompleted = false;
+
+        function showScreen(screenNumber) {
+            document.querySelectorAll('.container > div').forEach(screen => {
+                screen.style.display = 'none';
+            });
+            document.getElementById(`screen${screenNumber}`).style.display = 'block';
         }
 
-        function runAnalysis() {
-            const progressBar = document.getElementById('progressBar');
-            let progress = 0;
+        document.getElementById('fileInput').addEventListener('change', function(event) {
+            if (event.target.files.length > 0) {
+                document.getElementById('nextButton').style.display = 'block';
+            } else {
+                document.getElementById('nextButton').style.display = 'none';
+            }
+        });
 
-            const updateProgress = setInterval(() => {
-                progress += 10;
-                progressBar.style.width = progress + '%';
-                if (progress >= 100) clearInterval(updateProgress);
-                updateCharts();
+        function startAnalysis() {
+            showScreen(3);
+
+            let progressInterval = setInterval(function() {
+                if (progress >= 100) {
+                    clearInterval(progressInterval);
+                    analysisCompleted = true;
+                    document.getElementById('viewResultsButton').style.display = 'block';
+                } else {
+                    progress += 10;
+                    document.getElementById('analysisProgress').style.width = progress + '%';
+                }
             }, 500);
+
+            setTimeout(() => {
+                updateCharts();
+            }, 1000);
         }
 
-        // Initialize Engagement and Sentiment Charts
-        const ctxEngagement = document.getElementById('engagementChart').getContext('2d');
-        const ctxSentiment = document.getElementById('sentimentChart').getContext('2d');
-
-        const engagementData = Array.from({ length: 10 }, () => Math.floor(Math.random() * 10));
-        const sentimentData = Array.from({ length: 10 }, () => (Math.random() * 2 - 1).toFixed(2)); // Sentiment: -1 to 1 scale
-
-        const engagementChart = new Chart(ctxEngagement, {
-            type: 'line',
-            data: {
-                labels: Array.from({ length: 10 }, (_, i) => i + 1),
-                datasets: [{
-                    label: 'Engagement Score',
-                    data: engagementData,
-                    borderColor: '#ffcc00',
-                    fill: false,
-                    pointRadius: 5,
-                    pointHoverRadius: 7
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                const sentiment = sentimentData[context.dataIndex];
-                                return `Score: ${context.raw} | Sentiment: ${sentiment > 0 ? 'Positive' : 'Negative'}`;
-                            }
-                        }
-                    }
-                },
-                scales: {
-                    y: { beginAtZero: true, max: 10 }
-                }
-            }
-        });
-
-        const sentimentChart = new Chart(ctxSentiment, {
-            type: 'line',
-            data: {
-                labels: Array.from({ length: 10 }, (_, i) => i + 1),
-                datasets: [{
-                    label: 'Sentiment Score',
-                    data: sentimentData,
-                    borderColor: '#00ccff',
-                    fill: false,
-                    pointRadius: 5,
-                    pointHoverRadius: 7
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                const sentimentScore = context.raw;
-                                return `Sentiment: ${sentimentScore > 0 ? 'Positive' : 'Negative'} (${sentimentScore})`;
-                            }
-                        }
-                    }
-                },
-                scales: {
-                    y: { min: -1, max: 1 }
-                }
-            }
-        });
-
-        // Update Charts Function for Real-Time Analysis Simulation
         function updateCharts() {
-            engagementData.push(Math.floor(Math.random() * 10));
-            sentimentData.push((Math.random() * 2 - 1).toFixed(2));
-            engagementChart.update();
-            sentimentChart.update();
+            const engagementChartContext = document.getElementById('engagementChart').getContext('2d');
+            const sentimentChartContext = document.getElementById('sentimentChart').getContext('2d');
+
+            const engagementChart = new Chart(engagementChartContext, {
+                type: 'line',
+                data: {
+                    labels: ['Segment 1', 'Segment 2', 'Segment 3', 'Segment 4'],
+                    datasets: [{
+                        label: 'Engagement Score',
+                        data: [7, 8, 9, 6],
+                        borderColor: 'rgba(255, 159, 64, 1)',
+                        backgroundColor: 'rgba(255, 159, 64, 0.2)',
+                        fill: true
+                    }]
+                }
+            });
+
+            const sentimentChart = new Chart(sentimentChartContext, {
+                type: 'line',
+                data: {
+                    labels: ['Segment 1', 'Segment 2', 'Segment 3', 'Segment 4'],
+                    datasets: [{
+                        label: 'Sentiment Score',
+                        data: [0.5, 0.8, -0.4, 0.3],
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                        fill: true
+                    }]
+                }
+            });
         }
 
-        // Download CSV Function
-        function downloadCSV() {
-            const csvData = 'data:text/csv;charset=utf-8,' +
-                'Chunk,Engagement Score,Sentiment Score\n' +
-                engagementData.map((score, index) => `${index + 1},${score},${sentimentData[index]}`).join('\n');
-            const encodedUri = encodeURI(csvData);
-            const link = document.createElement('a');
-            link.setAttribute('href', encodedUri);
-            link.setAttribute('download', 'engagement_sentiment_report.csv');
+        function downloadReport() {
+            const reportData = {
+                engagementScore: [7, 8, 9, 6],
+                sentimentScore: [0.5, 0.8, -0.4, 0.3]
+            };
+
+            const csvContent = "data:text/csv;charset=utf-8,"
+                + "Segment,Engagement Score,Sentiment Score\n"
+                + reportData.engagementScore.map((score, index) => `${index + 1},${score},${reportData.sentimentScore[index]}`).join("\n");
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "engagement_report.csv");
             document.body.appendChild(link);
             link.click();
-            document.body.removeChild(link);
-        }
-
-        // Download PDF Function (Placeholder)
-        function downloadPDF() {
-            alert('PDF download functionality coming soon!');
         }
     </script>
 </body>
