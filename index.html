@@ -129,6 +129,7 @@
             <div class="progress-bar"><div class="progress" id="progressBar"></div></div>
             <div id="chartContainer">
                 <canvas id="engagementChart"></canvas>
+                <canvas id="sentimentChart"></canvas>
             </div>
             <div class="buttons">
                 <button class="secondary-button" onclick="showScreen('uploadScreen')">Back</button>
@@ -153,14 +154,12 @@
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        // Navigation and Progress
         function showScreen(screenId) {
             document.querySelectorAll('.screen').forEach(screen => screen.classList.remove('active'));
             document.getElementById(screenId).classList.add('active');
             if (screenId === 'analysisScreen') runAnalysis();
         }
 
-        // Simulate Analysis with Progress and Chart Updates
         function runAnalysis() {
             const progressBar = document.getElementById('progressBar');
             let progress = 0;
@@ -169,19 +168,24 @@
                 progress += 10;
                 progressBar.style.width = progress + '%';
                 if (progress >= 100) clearInterval(updateProgress);
-                updateChart(engagementChart);
+                updateCharts();
             }, 500);
         }
 
-        // Initialize Charts
-        const ctx = document.getElementById('engagementChart').getContext('2d');
-        const engagementChart = new Chart(ctx, {
+        // Initialize Engagement and Sentiment Charts
+        const ctxEngagement = document.getElementById('engagementChart').getContext('2d');
+        const ctxSentiment = document.getElementById('sentimentChart').getContext('2d');
+
+        const engagementData = Array.from({ length: 10 }, () => Math.floor(Math.random() * 10));
+        const sentimentData = Array.from({ length: 10 }, () => (Math.random() * 2 - 1).toFixed(2)); // Sentiment: -1 to 1 scale
+
+        const engagementChart = new Chart(ctxEngagement, {
             type: 'line',
             data: {
                 labels: Array.from({ length: 10 }, (_, i) => i + 1),
                 datasets: [{
                     label: 'Engagement Score',
-                    data: Array.from({ length: 10 }, () => Math.floor(Math.random() * 10)),
+                    data: engagementData,
                     borderColor: '#ffcc00',
                     fill: false,
                     pointRadius: 5,
@@ -194,7 +198,8 @@
                     tooltip: {
                         callbacks: {
                             label: function(context) {
-                                return 'Score: ' + context.raw;
+                                const sentiment = sentimentData[context.dataIndex];
+                                return `Score: ${context.raw} | Sentiment: ${sentiment > 0 ? 'Positive' : 'Negative'}`;
                             }
                         }
                     }
@@ -205,29 +210,62 @@
             }
         });
 
-        // Update Chart Function for Real-Time Analysis Simulation
-        function updateChart(chart) {
-            chart.data.datasets[0].data.push(Math.floor(Math.random() * 10));
-            chart.data.labels.push(chart.data.labels.length + 1);
-            chart.update();
+        const sentimentChart = new Chart(ctxSentiment, {
+            type: 'line',
+            data: {
+                labels: Array.from({ length: 10 }, (_, i) => i + 1),
+                datasets: [{
+                    label: 'Sentiment Score',
+                    data: sentimentData,
+                    borderColor: '#00ccff',
+                    fill: false,
+                    pointRadius: 5,
+                    pointHoverRadius: 7
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const sentimentScore = context.raw;
+                                return `Sentiment: ${sentimentScore > 0 ? 'Positive' : 'Negative'} (${sentimentScore})`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: { min: -1, max: 1 }
+                }
+            }
+        });
+
+        // Update Charts Function for Real-Time Analysis Simulation
+        function updateCharts() {
+            engagementData.push(Math.floor(Math.random() * 10));
+            sentimentData.push((Math.random() * 2 - 1).toFixed(2));
+            engagementChart.update();
+            sentimentChart.update();
         }
 
         // Download CSV Function
         function downloadCSV() {
-            const csvData = 'data:text/csv;charset=utf-8,' + engagementChart.data.labels.map((label, index) => `${label},${engagementChart.data.datasets[0].data[index]}`).join('\n');
+            const csvData = 'data:text/csv;charset=utf-8,' +
+                'Chunk,Engagement Score,Sentiment Score\n' +
+                engagementData.map((score, index) => `${index + 1},${score},${sentimentData[index]}`).join('\n');
             const encodedUri = encodeURI(csvData);
             const link = document.createElement('a');
             link.setAttribute('href', encodedUri);
-            link.setAttribute('download', 'engagement_report.csv');
+            link.setAttribute('download', 'engagement_sentiment_report.csv');
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
         }
 
-        // Download PDF Function
+        // Download PDF Function (Placeholder)
         function downloadPDF() {
-            // Placeholder function for PDF download
-            alert('PDF download coming soon!');
+            alert('PDF download functionality coming soon!');
         }
     </script>
 </body>
