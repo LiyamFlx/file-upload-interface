@@ -3,209 +3,232 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>InsightWave - Social Media Engagement & Retention Tracker</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <title>InsightWave Engagement Analysis</title>
     <style>
-        /* Basic styling and layout for the page */
-        body {
+        /* Reset and Basic Styles */
+        body, h2, p, button {
+            margin: 0;
+            padding: 0;
             font-family: Arial, sans-serif;
-            background-color: #121212;
-            color: #f0f0f0;
+        }
+
+        body {
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 100vh;
-            margin: 0;
-        }
-        #app {
-            width: 80%;
-            max-width: 800px;
-            background-color: #1e1e1e;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
-        }
-        h1, h2 {
-            color: #ffb300;
-            text-align: center;
-        }
-        .section {
-            margin-bottom: 30px;
-        }
-        .metric {
-            margin-bottom: 15px;
+            height: 100vh;
+            background-color: #121212;
             color: #f0f0f0;
         }
-        input[type="number"] {
-            width: calc(100% - 22px);
-            padding: 10px;
-            margin-top: 5px;
-            border: none;
-            border-radius: 5px;
-            outline: none;
-            background-color: #2b2b2b;
-            color: #ffffff;
+
+        #app {
+            width: 400px;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            background-color: #1f1f1f;
+            text-align: center;
         }
+
+        .screen {
+            display: none;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        h2 {
+            font-size: 1.8em;
+            color: #ffcc00;
+            margin-bottom: 15px;
+        }
+
+        p {
+            margin: 10px 0 20px 0;
+            font-size: 1em;
+        }
+
+        input[type="file"] {
+            margin: 20px auto;
+        }
+
+        .progress-bar {
+            height: 10px;
+            width: 100%;
+            background-color: #333;
+            border-radius: 5px;
+            margin: 15px 0;
+            overflow: hidden;
+        }
+
+        .progress {
+            height: 100%;
+            width: 0%;
+            background-color: #ffcc00;
+            transition: width 0.3s;
+        }
+
+        #chartContainer {
+            width: 100%;
+            height: 300px;
+            margin-top: 20px;
+        }
+
         button {
             padding: 10px 15px;
+            font-size: 1em;
             border: none;
             border-radius: 5px;
-            background-color: #ffb300;
-            color: #121212;
-            font-weight: bold;
             cursor: pointer;
+            margin: 10px;
             transition: background-color 0.3s;
-            margin-top: 10px;
-            width: 100%;
         }
+
         button:hover {
-            background-color: #ff9800;
+            background-color: #444;
         }
-        #results p {
-            margin-top: 10px;
-            font-weight: bold;
+
+        .primary-button {
+            background-color: #ffcc00;
+            color: #1f1f1f;
         }
-        .tooltip {
-            position: relative;
-            cursor: pointer;
+
+        .secondary-button {
+            background-color: #333;
+            color: #f0f0f0;
         }
-        .tooltip:hover::after {
-            content: attr(data-tooltip);
-            position: absolute;
-            top: -30px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: #ffb300;
-            color: #121212;
-            padding: 5px;
-            border-radius: 5px;
-            font-size: 12px;
-            white-space: nowrap;
-            z-index: 1;
-        }
-        #engagementChart {
-            background-color: #2b2b2b;
-            border-radius: 8px;
-            padding: 10px;
+
+        .download-buttons {
+            display: flex;
+            justify-content: center;
         }
     </style>
 </head>
 <body>
     <div id="app">
-        <h1>InsightWave</h1>
-        <h2>Social Media Engagement & Retention Tracker</h2>
+        <!-- Start Screen -->
+        <div class="screen active" id="startScreen">
+            <h2>Welcome to InsightWave</h2>
+            <p>Analyze your audio content and gain AI-driven insights into engagement levels and sentiment.</p>
+            <button class="primary-button" onclick="showScreen('uploadScreen')">Start Analysis</button>
+        </div>
 
-        <!-- Engagement Metrics -->
-        <div class="section">
-            <h2>Engagement Metrics</h2>
-            <div class="metric tooltip" data-tooltip="Count of Likes, Shares, Comments">
-                <h3>Likes, Shares, Comments</h3>
-                <input type="number" id="likes" placeholder="Enter Likes">
-                <input type="number" id="shares" placeholder="Enter Shares">
-                <input type="number" id="comments" placeholder="Enter Comments">
-            </div>
-            
-            <div class="metric tooltip" data-tooltip="Click-Through Rate measures engagement in driving traffic">
-                <h3>Click-Through Rate (CTR)</h3>
-                <input type="number" id="clicks" placeholder="Enter Clicks">
-                <input type="number" id="impressions" placeholder="Enter Impressions">
-                <button onclick="calculateCTR()">Calculate CTR</button>
-                <p id="ctr-result">CTR: -</p>
-            </div>
-            
-            <div class="metric tooltip" data-tooltip="Track new follower growth over time">
-                <h3>Follower Growth</h3>
-                <input type="number" id="new-followers" placeholder="Enter New Followers">
-                <button onclick="calculateFollowerGrowth()">Calculate Growth</button>
-                <p id="follower-growth-result">Growth Rate: -</p>
-            </div>
+        <!-- Upload Screen -->
+        <div class="screen" id="uploadScreen">
+            <h2>Upload Your Audio File</h2>
+            <input type="file" id="fileInput" accept=".mp3,.mp4,.wav">
+            <button class="secondary-button" onclick="showScreen('startScreen')">Back</button>
+            <button class="primary-button" onclick="showScreen('analysisScreen')">Calculate Engagement</button>
+        </div>
 
-            <div class="metric tooltip" data-tooltip="Percentage of audience interaction with your content">
-                <h3>Engagement Rate</h3>
-                <input type="number" id="total-engagement" placeholder="Total Engagements">
-                <input type="number" id="total-followers" placeholder="Total Followers">
-                <button onclick="calculateEngagementRate()">Calculate Engagement Rate</button>
-                <p id="engagement-rate-result">Engagement Rate: -</p>
+        <!-- Analysis Screen -->
+        <div class="screen" id="analysisScreen">
+            <h2>Real-Time Analysis</h2>
+            <p>Analyzing volume, pitch, sentiment, and more...</p>
+            <div class="progress-bar"><div class="progress" id="progressBar"></div></div>
+            <div id="chartContainer">
+                <canvas id="engagementChart"></canvas>
+            </div>
+            <div class="buttons">
+                <button class="secondary-button" onclick="showScreen('uploadScreen')">Back</button>
+                <button class="primary-button" onclick="showScreen('resultsScreen')">View Results</button>
             </div>
         </div>
 
-        <!-- Audience Retention Strategies -->
-        <div class="section">
-            <h2>Audience Retention Strategies</h2>
-            <p>Utilize segmentation, personalized content, email marketing, and interactive media to retain your audience effectively.</p>
-        </div>
-
-        <!-- Enhanced Engagement Technologies -->
-        <div class="section">
-            <h2>Enhanced Engagement Technologies</h2>
-            <p>Use advanced tools like AI chatbots, AR/VR, and gamification to engage and captivate your audience.</p>
-        </div>
-
-        <!-- Engagement Over Time Chart -->
-        <div class="section">
-            <h2>Engagement Over Time</h2>
-            <canvas id="engagementChart" width="400" height="200"></canvas>
+        <!-- Results Screen -->
+        <div class="screen" id="resultsScreen">
+            <h2>Analysis Results</h2>
+            <p>Here are your detailed insights:</p>
+            <div id="chartContainer">
+                <canvas id="resultsChart"></canvas>
+            </div>
+            <div class="download-buttons">
+                <button class="primary-button" onclick="downloadCSV()">Download CSV</button>
+                <button class="secondary-button" onclick="downloadPDF()">Download PDF</button>
+            </div>
+            <button class="secondary-button" onclick="showScreen('startScreen')">Start New Analysis</button>
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        // Calculate Click-Through Rate
-        function calculateCTR() {
-            const clicks = parseInt(document.getElementById('clicks').value);
-            const impressions = parseInt(document.getElementById('impressions').value);
-            if (impressions && clicks) {
-                const ctr = ((clicks / impressions) * 100).toFixed(2);
-                document.getElementById('ctr-result').innerText = `CTR: ${ctr}%`;
-            } else {
-                document.getElementById('ctr-result').innerText = "CTR: -";
-            }
+        // Navigation and Progress
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(screen => screen.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+            if (screenId === 'analysisScreen') runAnalysis();
         }
 
-        // Calculate Engagement Rate
-        function calculateEngagementRate() {
-            const totalEngagement = parseInt(document.getElementById('total-engagement').value);
-            const totalFollowers = parseInt(document.getElementById('total-followers').value);
-            if (totalEngagement && totalFollowers) {
-                const engagementRate = ((totalEngagement / totalFollowers) * 100).toFixed(2);
-                document.getElementById('engagement-rate-result').innerText = `Engagement Rate: ${engagementRate}%`;
-            } else {
-                document.getElementById('engagement-rate-result').innerText = "Engagement Rate: -";
-            }
+        // Simulate Analysis with Progress and Chart Updates
+        function runAnalysis() {
+            const progressBar = document.getElementById('progressBar');
+            let progress = 0;
+
+            const updateProgress = setInterval(() => {
+                progress += 10;
+                progressBar.style.width = progress + '%';
+                if (progress >= 100) clearInterval(updateProgress);
+                updateChart(engagementChart);
+            }, 500);
         }
 
-        // Sample Follower Growth Visualization
+        // Initialize Charts
         const ctx = document.getElementById('engagementChart').getContext('2d');
         const engagementChart = new Chart(ctx, {
             type: 'line',
             data: {
-                labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+                labels: Array.from({ length: 10 }, (_, i) => i + 1),
                 datasets: [{
-                    label: 'Follower Growth',
-                    data: [50, 100, 150, 200], // Example data, replace with real data
-                    borderColor: '#ffb300',
-                    backgroundColor: 'rgba(255, 179, 0, 0.2)',
-                    borderWidth: 2,
-                    pointRadius: 4,
-                    pointHoverRadius: 6,
-                    pointBackgroundColor: '#ff9800',
-                    fill: true
+                    label: 'Engagement Score',
+                    data: Array.from({ length: 10 }, () => Math.floor(Math.random() * 10)),
+                    borderColor: '#ffcc00',
+                    fill: false,
+                    pointRadius: 5,
+                    pointHoverRadius: 7
                 }]
             },
             options: {
                 responsive: true,
-                scales: {
-                    y: { beginAtZero: true }
-                },
                 plugins: {
                     tooltip: {
                         callbacks: {
-                            label: (context) => `Followers: ${context.raw}`
+                            label: function(context) {
+                                return 'Score: ' + context.raw;
+                            }
                         }
                     }
+                },
+                scales: {
+                    y: { beginAtZero: true, max: 10 }
                 }
             }
         });
+
+        // Update Chart Function for Real-Time Analysis Simulation
+        function updateChart(chart) {
+            chart.data.datasets[0].data.push(Math.floor(Math.random() * 10));
+            chart.data.labels.push(chart.data.labels.length + 1);
+            chart.update();
+        }
+
+        // Download CSV Function
+        function downloadCSV() {
+            const csvData = 'data:text/csv;charset=utf-8,' + engagementChart.data.labels.map((label, index) => `${label},${engagementChart.data.datasets[0].data[index]}`).join('\n');
+            const encodedUri = encodeURI(csvData);
+            const link = document.createElement('a');
+            link.setAttribute('href', encodedUri);
+            link.setAttribute('download', 'engagement_report.csv');
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Download PDF Function
+        function downloadPDF() {
+            // Placeholder function for PDF download
+            alert('PDF download coming soon!');
+        }
     </script>
 </body>
 </html>
